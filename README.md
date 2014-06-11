@@ -103,3 +103,9 @@ Use bower.json as usual to describe your javascript libraries dependancies. You 
 * ``grunt prod``: Use this for production. It will generate a ready for prod build of your application, with all the javascript concatenated and minified.
 
 * ``grunt ci``: Use this for continuous integration testing. It runs the unit tests in dev and prod mode in a row.
+
+### Examples
+
+Granlecoja methodology has been built for the buildbot project, but is very generic, and can be used for any projects.
+
+You can see it in action at https://github.com/buildbot/buildbot/tree/nine/www

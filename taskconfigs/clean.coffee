@@ -12,3 +12,8 @@ module.exports =
         '.temp'
         '<%= dir.build %>'
     ]
+    scripts: [
+        '.temp/scripts/libs/**'
+        '.temp/scripts/*.js'
+        '.temp/scripts/*.js.map'
+    ]

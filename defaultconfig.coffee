@@ -77,9 +77,6 @@ module.exports =
 
             # JavaScript libraries
             js: [
-                'src/libs/jquery/dist/jquery.js'
-                'src/libs/angular/angular.js'
-                'src/libs/requirejs/require.js'
             ]
 
             # JavaScript libraries used during testing only
