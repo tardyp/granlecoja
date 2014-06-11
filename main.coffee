@@ -20,6 +20,11 @@ module.exports = (grunt, dir) ->
         configPath: path.join(__dirname, 'taskconfigs')
         data:
             config: buildConfig
+        loadGruntTasks:
+            pattern: 'grunt-*'
+            config: require('./package.json')
+            scope: 'peerDependencies'
+
     taskConfig = require('load-grunt-config')(grunt, options)
 
     # Merge the configs

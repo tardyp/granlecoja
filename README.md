@@ -28,7 +28,11 @@ Only templates and boilerplate generation is done, with no way of upgrading your
 
 yo templates using Granlecoja maybe created in the future
 
-### Usage
+### Why the name ``granlecoja``
+
+Because it sounds much better than grunt-angular-less-coffee-jade
+
+### Configuration
 
 Make your package.js depend on "granlecoja" == "latest"
 
@@ -89,6 +93,8 @@ so that your bower dependencies are stored on side of your source code.
 You also want to configure ".gitignore", to ignore this directory.
 
 Use bower.json as usual to describe your javascript libraries dependancies. You at least need angular.js > 1.2, bootstrap 3.0 and jquery.
+
+### Usage
 
 3 grunt targets are created:
 
