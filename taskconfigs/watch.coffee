@@ -48,13 +48,13 @@ module.exports = (grunt, options) ->
             '<%= files.index %>'
         ]
         tasks: [
-            'newer:jade:compile'
+            'newer:jade:dev'
         ].concat(copy)
 
     less:
         files: '<%= files.less %>'
         tasks: [
-            'newer:less:compile'
+            'newer:less:dev'
         ].concat(copy)
 
     options:
