@@ -101,7 +101,7 @@ module.exports =
     js_compiled:
         files: [
             cwd: '.temp/scripts'
-            src: ['**/*.js', '!<%= name %>/**/*.js']
+            src: ['**/*', '!<%= name %>/**/**']
             dest: '.temp/scripts/<%= name %>/scripts'
             expand: true
         ]
