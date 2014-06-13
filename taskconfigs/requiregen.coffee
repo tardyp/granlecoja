@@ -30,10 +30,15 @@ module.exports = (grunt, options) ->
         ]
         define: true
 
-    generate:
+    dev:
         cwd: '.temp/scripts'
         src: do ->
             if options.config.plugin
             then ['<%= name %>/**/*.js', '!<%= name %>/libs/require.js']
             else ['**/*.js', '!libs/require.js']
+        dest: '.temp/scripts/main.js'
+
+    prod:
+        cwd: '.temp/scripts'
+        src: ['**/*.js', '!libs/require.js']
         dest: '.temp/scripts/main.js'

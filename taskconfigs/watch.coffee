@@ -16,12 +16,12 @@ module.exports = (grunt, options) ->
         then [
             'newer:coffee:compile'
             'newer:copy:js_compiled'
-            'requiregen'
+            'requiregen:dev'
             'karma:unit:run'
         ]
         else [
             'newer:coffee:compile'
-            'requiregen'
+            'requiregen:dev'
             'karma:unit:run'
         ]
 
