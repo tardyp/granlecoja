@@ -5,7 +5,7 @@
 #   Basically, we just need angular is loaded first, app second and run last
 #
 ### ###############################################################################################
-module.exports =
+module.exports = (grunt, options) ->
 
     options:
         order: [
@@ -20,6 +20,7 @@ module.exports =
             '{,**/}test/libs/*'             # test libs in dev mode
             '{,**/}test/**'                 # test mocks in dev mode
             '{,**/}app.module'              # app needs libs
+            '{,**/}main.module'             # plugin's main module needs libs
             '{,**/}*.module'                # other module definitions
             '{,**/}config'                  # bower configs
             '{,**/}*{.constant,.filter,.service,.controller,.directive,.route,.config,.templates}'
@@ -31,5 +32,8 @@ module.exports =
 
     generate:
         cwd: '.temp/scripts'
-        src: ['**/*.js', '!libs/require.js']
+        src: do ->
+            if options.config.plugin
+            then ['<%= name %>/**/*.js', '!<%= name %>/libs/require.js']
+            else ['**/*.js', '!libs/require.js']
         dest: '.temp/scripts/main.js'

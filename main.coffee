@@ -69,7 +69,7 @@ module.exports = (grunt, dir) ->
     ]
 
     if buildConfig.plugin?
-        copy_dev = ['copy:js_compiled', 'clean:scripts', 'requiregen', 'copy:plugin_dev']
+        copy_dev = ['copy:js_compiled', 'requiregen', 'copy:plugin_dev']
     else
         copy_dev = ['requiregen', 'copy:build_dev']
 

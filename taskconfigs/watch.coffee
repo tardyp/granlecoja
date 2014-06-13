@@ -4,7 +4,26 @@
 #   Using grunt newer to run tasks with changed files only
 #
 ### ###############################################################################################
-module.exports =
+module.exports = (grunt, options) ->
+
+    copy =
+        if options.config.plugin
+        then ['copy:plugin_dev']
+        else ['copy:build_dev']
+
+    compile =
+        if options.config.plugin
+        then [
+            'newer:coffee:compile'
+            'newer:copy:js_compiled'
+            'requiregen'
+            'karma:unit:run'
+        ]
+        else [
+            'newer:coffee:compile'
+            'requiregen'
+            'karma:unit:run'
+        ]
 
     configFiles:
         files: [
@@ -17,21 +36,11 @@ module.exports =
 
     coffee:
         files: '<%= files.coffee %>'
-        tasks: [
-            'newer:coffee:compile'
-            'requiregen'
-            'newer:copy:build_dev'
-            'karma:unit:run'
-        ]
+        tasks: compile.concat(copy)
 
     coffee_unit:
         files: '<%= files.coffee_unit %>'
-        tasks: [
-            'newer:coffee:unit'
-            'requiregen'
-            'newer:copy:build_dev'
-            'karma:unit:run'
-        ]
+        tasks: ['newer:coffee:unit'].concat(compile).concat(copy)
 
     jade:
         files: [
@@ -40,15 +49,13 @@ module.exports =
         ]
         tasks: [
             'newer:jade:compile'
-            'newer:copy:build_dev'
-        ]
+        ].concat(copy)
 
     less:
         files: '<%= files.less %>'
         tasks: [
             'newer:less:compile'
-            'newer:copy:build_dev'
-        ]
+        ].concat(copy)
 
     options:
         livereload: true
