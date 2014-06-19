@@ -57,7 +57,7 @@ module.exports = (grunt, dir) ->
         'concurrent:copy_prod'
         'concat:bower_config'
         'ngtemplates'
-        'requiregen'
+        'requiregen:prod'
         'requirejs'
         'copy:build_prod'
     ].concat extras.extra_copy
@@ -69,9 +69,9 @@ module.exports = (grunt, dir) ->
     ]
 
     if buildConfig.plugin?
-        copy_dev = ['copy:js_compiled', 'clean:scripts', 'requiregen', 'copy:plugin_dev']
+        copy_dev = ['copy:js_compiled', 'requiregen:dev', 'copy:plugin_dev']
     else
-        copy_dev = ['requiregen', 'copy:build_dev']
+        copy_dev = ['requiregen:dev', 'copy:build_dev']
 
     # Default task
     grunt.registerTask 'default', [
