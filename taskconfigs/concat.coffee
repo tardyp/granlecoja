@@ -10,5 +10,5 @@ module.exports =
         dest: '.temp/scripts/config.js'
         options:
             separator:','
-            banner: "angular.module('buildbot.about').constant('bower_configs', ["
+            banner: "angular.module('bower_configs', []).constant('bower_configs', ["
             footer: ']);'
