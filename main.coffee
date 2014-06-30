@@ -53,8 +53,15 @@ module.exports = (grunt, dir) ->
     # Building for the production environment
     grunt.registerTask 'prod', [
         'clean'
-        'concurrent:compile_prod'
-        'concurrent:copy_prod'
+        'coffeelint'
+        'coffee:compile'
+        'jade:prod'
+        'less:prod'
+        'imagemin'
+        'copy:libs'
+        'copy:fonts'
+        'copy:common'
+        'copy:js'
         'concat:bower_config'
         'ngtemplates'
         'requiregen:prod'
@@ -76,8 +83,17 @@ module.exports = (grunt, dir) ->
     # Default task
     grunt.registerTask 'default', [
         'clean'
-        'concurrent:compile_dev'
-        'concurrent:copy_dev'
+        'coffeelint'
+        'coffee'
+        'jade:dev'
+        'less:dev'
+        'copy:libs'
+        'copy:libs_unit'
+        'copy:fonts'
+        'copy:common'
+        'copy:js'
+        'copy:js_unit'
+        'copy:images'
         'concat:bower_config'
     ].concat extras.extra_code_for_tests_tasks
     .concat copy_dev
