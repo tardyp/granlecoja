@@ -1,101 +1,30 @@
-module.exports = (grunt, dir) ->
-    dir ?= "grunt"
+module.exports =  (gulp) ->
+  ngClassify = require 'gulp-ng-classify'
+  sourcemaps = require 'gulp-sourcemaps'
+  coffee = require 'gulp-coffee'
+  gutil = require 'gulp-util'
+  annotate = require 'gulp-ng-annotate'
+  concat = require 'gulp-concat'
+  cached = require('gulp-cached')
+  remember = require('gulp-remember')
+  scriptsGlob = 'src/**/*.coffee'
 
-    # Load Node.js path module
-    path = require('path')
-    fs = require('fs')
+  gulp.task 'scripts', ->
+      gulp.src scriptsGlob
+        .pipe cached('scripts')
+        .pipe sourcemaps.init()
+        .pipe ngClassify()
+        .pipe coffee()
+        .pipe annotate()
+        .pipe remember('scripts')
+        .pipe concat("main.js")
+        .pipe sourcemaps.write(".")
+        .pipe gulp.dest 'dist'
 
-    # Load in the build config files
-    defaultConfig = require("./defaultconfig.coffee")
-    buildConfig = require(path.join(process.cwd(), dir, "config.coffee"))
+  gulp.task "watch", ->
+    watcher = gulp.watch(scriptsGlob, ["scripts"]) # watch the same files in our scripts task
+    watcher.on "change", (event) ->
+      if event.type is "deleted" # if a file is deleted, forget about it
+        delete cached.caches.scripts[event.path] # gulp-cached remove api
 
-    # Load in the build config file
-    customtasks = path.join(process.cwd(), dir, "customtasks.coffee")
-    if fs.existsSync(customtasks)
-        extras = require(customtasks)(grunt)
-    else
-        extras = {}
-    # for now, only one task type is required
-    # feel free to add more, and send PR
-    extras.extra_code_for_tests_tasks ?= []
-    extras.extra_copy ?= []
-
-    # Load grunt tasks and configuration automatically
-    options =
-        configPath: path.join(__dirname, 'taskconfigs')
-        data:
-            config: buildConfig
-        loadGruntTasks:
-            pattern: 'grunt-*'
-            config: require('./package.json')
-            scope: 'peerDependencies'
-
-    taskConfig = require('load-grunt-config')(grunt, options)
-
-    # Merge the configs
-    grunt.config.merge(defaultConfig)
-    grunt.log.write(JSON.stringify(grunt.config("files.library.js"))+"\n")
-    grunt.config.merge(buildConfig)
-    grunt.log.write(JSON.stringify(grunt.config("files.library.js"))+"\n")
-    grunt.config.merge(taskConfig)
-    grunt.log.write(JSON.stringify(grunt.config("files.library.js"))+"\n")
-
-    ### ###########################################################################################
-    #   Alias tasks
-    ### ###########################################################################################
-
-    # Compiles all files, then set up a watcher to build whenever files change
-    grunt.registerTask 'dev', [
-        'default'
-        'karma:unit'
-        'watch'
-    ]
-    # Building for the production environment
-    grunt.registerTask 'prod', [
-        'clean'
-        'coffeelint'
-        'coffee:compile'
-        'jade:prod'
-        'less:prod'
-        'imagemin'
-        'copy:libs'
-        'copy:fonts'
-        'copy:common'
-        'copy:js'
-        'concat:bower_config'
-        'ngtemplates'
-        'requiregen:prod'
-        'requirejs'
-        'copy:build_prod'
-    ].concat extras.extra_copy
-
-    # Steps needed for CI
-    grunt.registerTask 'ci', [
-        'default'
-        'karma:ci'
-    ]
-
-    if buildConfig.plugin?
-        copy_dev = ['copy:js_compiled', 'requiregen:dev', 'copy:plugin_dev']
-    else
-        copy_dev = ['requiregen:dev', 'copy:build_dev']
-
-    # Default task
-    grunt.registerTask 'default', [
-        'clean'
-        'coffeelint'
-        'coffee'
-        'jade:dev'
-        'less:dev'
-        'copy:libs'
-        'copy:libs_unit'
-        'copy:fonts'
-        'copy:common'
-        'copy:js'
-        'copy:js_unit'
-        'copy:images'
-        'concat:bower_config'
-    ].concat extras.extra_code_for_tests_tasks
-    .concat copy_dev
-    .concat extras.extra_copy
-
+        remember.forget "scripts", event.path # gulp-remember remove api
