@@ -1,30 +1,56 @@
 module.exports =  (gulp) ->
-  ngClassify = require 'gulp-ng-classify'
-  sourcemaps = require 'gulp-sourcemaps'
-  coffee = require 'gulp-coffee'
-  gutil = require 'gulp-util'
-  annotate = require 'gulp-ng-annotate'
-  concat = require 'gulp-concat'
-  cached = require('gulp-cached')
-  remember = require('gulp-remember')
-  scriptsGlob = 'src/**/*.coffee'
+    # gulp is not cs friendly. you need to register coffeescript first to be able to load cs files
 
-  gulp.task 'scripts', ->
-      gulp.src scriptsGlob
-        .pipe cached('scripts')
-        .pipe sourcemaps.init()
-        .pipe ngClassify()
-        .pipe coffee()
-        .pipe annotate()
-        .pipe remember('scripts')
-        .pipe concat("main.js")
-        .pipe sourcemaps.write(".")
-        .pipe gulp.dest 'dist'
+    require("coffee-script/register")
+    # utilities
+    path = require('path')
+    fs = require('fs')
+    _ = require('lodash')
 
-  gulp.task "watch", ->
-    watcher = gulp.watch(scriptsGlob, ["scripts"]) # watch the same files in our scripts task
-    watcher.on "change", (event) ->
-      if event.type is "deleted" # if a file is deleted, forget about it
-        delete cached.caches.scripts[event.path] # gulp-cached remove api
+    # gulp plugins
+    ngClassify = require 'gulp-ng-classify'
+    sourcemaps = require 'gulp-sourcemaps'
+    coffee = require 'gulp-coffee'
+    gutil = require 'gulp-util'
+    annotate = require 'gulp-ng-annotate'
+    concat = require 'gulp-concat'
+    cached = require 'gulp-cached'
+    remember = require 'gulp-remember'
+    merge = require 'merge-stream'
+    debug = require 'gulp-debug'
+    gutil = require 'gulp-util'
 
-        remember.forget "scripts", event.path # gulp-remember remove api
+    # Load in the build config files
+    config = require("./defaultconfig.coffee")
+    buildConfig = require(path.join(process.cwd(), "guanlecoja", "config.coffee"))
+    _.merge(config, buildConfig)
+
+    gulp.task 'scripts', ->
+        libs = gulp.src(config.files.library.js)
+            .pipe cached('libs')
+            .pipe sourcemaps.init()
+            .pipe concat("libs.js")
+           .pipe remember('libs')
+
+        coffee = gulp.src config.files.coffee
+            .pipe cached('coffeescripts')
+            .pipe sourcemaps.init()
+            .pipe ngClassify()
+            .pipe coffee().on('error', gutil.log)
+            .pipe annotate()
+            .pipe remember('coffeescripts')
+            .pipe debug({verbose:false})
+            .pipe concat("coffee.js")
+
+        merge(libs, coffee)
+            .pipe concat("main.js")
+            .pipe sourcemaps.write(".")
+            .pipe gulp.dest 'dist'
+
+    gulp.task 'scripts2', ->
+        coffee = gulp.src config.files.coffee
+            .pipe gulp.dest 'dist'
+        merge(coffee)
+    gulp.task "watch", ->
+        gulp.watch(config.files.coffee, ["scripts2"])
+    gulp.task "default", ['scripts2', 'watch']
