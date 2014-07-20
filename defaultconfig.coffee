@@ -18,25 +18,20 @@ module.exports =
     #   This is a collection of file patterns
     ### ###########################################################################################
     files:
-        # JavaScript
-        js: [
-            'src/app/**/*.js'
-            '!src/app/**/*.spec.js'
+
+        # app entrypoint should be placed first, so need to be specific
+        app: [
+            'src/**/*.module.coffee'
         ]
 
-        # JavaScript test
-        js_unit: [
-            'src/app/**/*.spec.js'
+        # scripts (can be coffee or js)
+        scripts: [
+            'src/**/*.coffee'
+            '!src/**/*.spec.coffee'
         ]
 
-        # CoffeeScript
-        coffee: [
-            'src/app/**/*.coffee'
-            '!src/app/**/*.spec.coffee'
-        ]
-
-        # CoffeeScript test
-        coffee_unit: [
+        # CoffeeScript tests
+        tests: [
             'test/**/*.coffee'
             'src/app/**/*.spec.coffee'
         ]
@@ -67,11 +62,6 @@ module.exports =
             'src/libs/font-awesome/fonts/*'
         ]
 
-        # Common files
-        common: [
-            'src/common/*'
-        ]
-
         # Library files
         library:
 
@@ -80,6 +70,30 @@ module.exports =
             ]
 
             # JavaScript libraries used during testing only
-            js_unit: [
+            tests: [
                 'src/libs/angular-mocks/angular-mocks.js'
             ]
+
+    ### ###########################################################################################
+    #   This is the default configuration for karma
+    ### ###########################################################################################
+    karma:
+
+        # frameworks to use
+        # available frameworks: https://npmjs.org/browse/keyword/karma-adapter
+        frameworks: ['jasmine']
+
+        # test results reporter to use
+        # possible values: 'dots', 'progress'
+        # available reporters: https://npmjs.org/browse/keyword/karma-reporter
+        reporters: ['progress']
+
+        # start these browsers
+        # available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
+        browsers: ['PhantomJS']
+        logLevel: "LOG_DEBUG"
+
+        plugins: [
+          'karma-jasmine',
+          'karma-phantomjs-launcher'
+        ]

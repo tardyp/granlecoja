@@ -7,50 +7,124 @@ module.exports =  (gulp) ->
     fs = require('fs')
     _ = require('lodash')
 
+    argv = require('minimist')(process.argv.slice(2))
+
     # gulp plugins
     ngClassify = require 'gulp-ng-classify'
+    gif = require 'gulp-if'
     sourcemaps = require 'gulp-sourcemaps'
     coffee = require 'gulp-coffee'
     gutil = require 'gulp-util'
     annotate = require 'gulp-ng-annotate'
     concat = require 'gulp-concat'
     cached = require 'gulp-cached'
+    karma = require 'gulp-karma'
     remember = require 'gulp-remember'
-    merge = require 'merge-stream'
+    uglify = require 'gulp-uglify'
+    jade = require 'gulp-jade'
+    rename = require 'gulp-rename'
+    templateCache = require 'gulp-angular-templatecache'
     debug = require 'gulp-debug'
     gutil = require 'gulp-util'
+    lr = require 'gulp-livereload'
+    cssmin = require 'gulp-minify-css'
+    less = require 'gulp-less'
+    shell = require 'gulp-shell'
+
+
+    # in prod mode, we uglify. in dev mode, we create sourcemaps
+    prod = "prod" in argv._
+    dev = "dev" in argv._
 
     # Load in the build config files
     config = require("./defaultconfig.coffee")
     buildConfig = require(path.join(process.cwd(), "guanlecoja", "config.coffee"))
     _.merge(config, buildConfig)
 
+    # first thing, we remove the build dir
+    # we do it synchronously to simplify things
+    require('rimraf').sync(config.dir.build)
+
     gulp.task 'scripts', ->
-        libs = gulp.src(config.files.library.js)
-            .pipe cached('libs')
-            .pipe sourcemaps.init()
-            .pipe concat("libs.js")
-           .pipe remember('libs')
+        # libs first, then app, then the rest
+        src = config.files.library.js.concat(config.files.app, config.files.scripts, config.files.templates)
+        gulp.src src
+            .pipe cached('scripts')
+            .pipe gif(dev, sourcemaps.init())
+            # coffee build
+            .pipe(gif("*.coffee", ngClassify())).on('error', gutil.log)
+            .pipe(gif("*.coffee", coffee())).on('error', gutil.log)
+            # jade build
+            .pipe(gif("*.jade", jade())).on('error', gutil.log)
+            .pipe gif "*.html", rename (p) ->
+                p.dirname = "views"
+                p.basename = p.basename.replace(".tpl","")
+                null
+            .pipe(gif("*.html", templateCache({module:"app"})))
+            .pipe remember('scripts')
+            .pipe concat("scripts.js")
+            # now everything is in js, do angular annotation, and minification
+            .pipe gif(prod, annotate())
+            .pipe gif(prod, uglify())
+            .pipe gif(dev, sourcemaps.write("."))
+            .pipe gulp.dest config.dir.build
+            .pipe gif(dev, lr())
 
-        coffee = gulp.src config.files.coffee
-            .pipe cached('coffeescripts')
-            .pipe sourcemaps.init()
-            .pipe ngClassify()
-            .pipe coffee().on('error', gutil.log)
-            .pipe annotate()
-            .pipe remember('coffeescripts')
-            .pipe debug({verbose:false})
-            .pipe concat("coffee.js")
+    gulp.task 'tests', ->
+        src = config.files.library.tests.concat(config.files.tests)
+        gulp.src src
+            .pipe cached('tests')
+            .pipe gif(dev, sourcemaps.init())
+            # coffee build
+            .pipe(gif("*.coffee", ngClassify()))
+            .pipe(gif("*.coffee", coffee())).on('error', gutil.log)
+            .pipe remember('tests')
+            .pipe concat("tests.js")
+            .pipe gif(dev, sourcemaps.write("."))
+            .pipe gulp.dest config.dir.build
 
-        merge(libs, coffee)
-            .pipe concat("main.js")
-            .pipe sourcemaps.write(".")
-            .pipe gulp.dest 'dist'
+    gulp.task 'dataspec',
+        shell.task("buildbot dataspec -o #{config.dir.build}/dataspec.js -g dataspec")
 
-    gulp.task 'scripts2', ->
-        coffee = gulp.src config.files.coffee
-            .pipe gulp.dest 'dist'
-        merge(coffee)
+    gulp.task 'styles', ->
+        gulp.src config.files.less
+            .pipe cached('styles')
+            .pipe less()
+            .pipe remember('styles')
+            .pipe concat("styles.css")
+            .pipe gif(prod, cssmin())
+            .pipe gulp.dest config.dir.build
+            .pipe gif(dev, lr())
+
+    # just copy fonts and imgs to the output dir
+    gulp.task 'fonts', ->
+        gulp.src config.files.fonts
+            .pipe gulp.dest config.dir.build + "/fonts"
+
+    gulp.task 'imgs', ->
+        gulp.src config.files.images
+            .pipe gulp.dest config.dir.build + "/img"
+
+    gulp.task 'index', ->
+        gulp.src config.files.index
+            .pipe jade()
+            .pipe gulp.dest config.dir.build
+
+
     gulp.task "watch", ->
-        gulp.watch(config.files.coffee, ["scripts2"])
-    gulp.task "default", ['scripts2', 'watch']
+        gulp.watch(config.files.scripts, ["scripts"])
+        gulp.watch(config.files.tests, ["tests"])
+        gulp.watch(config.files.less, ["styles"])
+
+
+    gulp.task "default", ['scripts', 'styles', 'fonts', 'imgs', 'index', 'tests', 'dataspec'], ->
+        karmaconf =
+            action: if dev then 'watch' else 'run'
+            configFile: "karma.conf.js"
+        gulp.src ["scripts.js", 'dataspec.js', "tests.js"]
+            .pipe karma(karmaconf)
+
+    gulp.task "dev", ['default', 'watch']
+
+    # prod is a fake task, which enables minification
+    gulp.task "prod", ['default']
